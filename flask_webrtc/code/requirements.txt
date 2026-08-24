@@ -1,0 +1,7 @@
+numpy
+Flask
+Flask-SocketIO
+eventlet
+
+flask-socketio
+simple-websocket
