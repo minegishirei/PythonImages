@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+    container_name: flask-signoz-demo
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./code:/code
+    environment:
+      PORT: 8080
+      OTEL_SERVICE_NAME: flask-signoz-demo
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_TRACE_CONSOLE: "true"
+      SIGNOZ_ACCESS_TOKEN: ${SIGNOZ_ACCESS_TOKEN:-}
+    depends_on:
+      - otel-collector
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.104.0
+    container_name: flask-signoz-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+    depends_on:
+      - openobserve
+    restart: unless-stopped
+
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    container_name: openobserve
+    restart: unless-stopped
+    ports:
+      - "5080:5080"
+    volumes:
+      - ./data:/data
+    environment:
+      - ZO_DATA_DIR=/data
+      - ZO_ROOT_USER_EMAIL=root@example.com
+      - ZO_ROOT_USER_PASSWORD=Complexpass#123
+
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: grafana-lgtm
+    ports:
+      - "3000:3000" # Grafana
+      - "9090:9090" # Prometheus
+    restart: unless-stopped

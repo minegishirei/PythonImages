@@ -1,0 +1,4 @@
+**/data/**
+**/.venv/**
+**/.pytest_cache/**
+
